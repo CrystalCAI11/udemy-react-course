@@ -1,26 +1,27 @@
 import { useSelector, useDispatch } from "react-redux"
 
 import classes from "./Counter.module.css"
+import { counterActions } from "../store/counter"
 
 const Counter = () => {
-  const counter = useSelector((state) => state.counter) // 自动获取最新的store
-  const show = useSelector((state) => state.showCounter)
+  const counter = useSelector((state) => state.counter.counter) // 自动获取最新的store
+  const show = useSelector((state) => state.counter.showCounter)
   const dispatch = useDispatch()
 
   const incrementHandler = () => {
-    dispatch({ type: "increment" })
+    dispatch(counterActions.increment())
   }
 
   const increaseHandler = () => {
-    dispatch({ type: "increase", payload: 5 }) // reducer里的action.payload可以接收payload参数，命名随意但是通常写成payload
+    dispatch(counterActions.increase(5)) // dispatch({type:"increase",payload:5})
   }
 
   const decrementHandler = () => {
-    dispatch({ type: "decrement" })
+    dispatch(counterActions.decrement())
   }
 
   const toggleCounterHandler = () => {
-    dispatch({ type: "toggle" })
+    dispatch(counterActions.toggle())
   }
 
   return (

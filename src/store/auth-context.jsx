@@ -1,37 +1,80 @@
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useCallback } from "react"
+import jwt from "jsonwebtoken"
+
+let logoutTimer
 
 const AuthContext = React.createContext({
+  // 这块只是为了在组件引用context的时候有输入自动联想，不需要的话直接React.createContext()也是一样的
+  token: "",
   isLoggedIn: false,
+  onLogin: (token, expTime) => {},
   onLogout: () => {},
-  onLogin: (email, password) => {},
 })
 
+const calculateRemainDuration = (expTime) => {
+  const currentTime = new Date().getTime() // timestamp in ms
+  const formatedExp = new Date(expTime).getTime()
+  const remainDuration = formatedExp - currentTime
+  return remainDuration
+}
+
+const getLocalToken = () => {
+  const localToken = localStorage.getItem("token")
+  const localExp = localStorage.getItem("expTime")
+  const remainDuration = calculateRemainDuration(localExp)
+  if (remainDuration <= 0) {
+    localStorage.removeItem("token")
+    localStorage.removeItem("expTime")
+    localStorage.removeItem("userInfo")
+    return null
+  }
+  return { token: localToken, duration: remainDuration }
+}
+
 export const AuthContextProvider = (props) => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
-  // useEffect在function component里是最后run的
-  useEffect(() => {
-    // 把这段放到useEffect里，只有[]里的dependency改变他才会run([]为空时只run第一次)，不然每次state改变整个组件重新run重新setIsLoggedIn(true)陷入死循环
-    const storedIsLoggedIn = localStorage.getItem("isLoggedIn")
-    if (storedIsLoggedIn) {
-      setIsLoggedIn(true)
+  const tokenInfo = getLocalToken()
+  let initialToken
+  if (tokenInfo) {
+    initialToken = tokenInfo.token
+  }
+  const [token, setToken] = useState(initialToken)
+  const isLoggedIn = !!token // 两次!!把它变成boolean格式
+
+  const loginHandler = (token, expTime) => {
+    const userInfo = JSON.stringify(jwt.decode(token))
+    localStorage.setItem("token", token)
+    localStorage.setItem("expTime", expTime)
+    localStorage.setItem("userInfo", userInfo)
+    setToken(token)
+    const remainDuration = calculateRemainDuration(expTime)
+    logoutTimer = setTimeout(logoutHandler, remainDuration) // 自动登出
+  }
+
+  const logoutHandler = useCallback(() => {
+    setToken(null)
+    localStorage.removeItem("token")
+    localStorage.removeItem("expTime")
+    localStorage.removeItem("userInfo")
+    if (logoutTimer) {
+      clearTimeout(logoutTimer)
     }
   }, [])
-  const loginHandler = () => {
-    localStorage.setItem("isLoggedIn", true)
-    setIsLoggedIn(true)
+
+  useEffect(() => {
+    if (tokenInfo) {
+      logoutTimer = setTimeout(logoutHandler, tokenInfo.duration)
+    }
+  }, [tokenInfo, logoutHandler])
+
+  const contextValue = {
+    token: token,
+    isLoggedIn: isLoggedIn,
+    onLogin: loginHandler,
+    onLogout: logoutHandler,
   }
-  const logoutHandler = () => {
-    localStorage.removeItem("isLoggedIn")
-    setIsLoggedIn(false)
-  }
+
   return (
-    <AuthContext.Provider
-      value={{
-        isLoggedIn: isLoggedIn,
-        onLogin: loginHandler,
-        onLogout: logoutHandler,
-      }}
-    >
+    <AuthContext.Provider value={contextValue}>
       {props.children}
     </AuthContext.Provider>
   )

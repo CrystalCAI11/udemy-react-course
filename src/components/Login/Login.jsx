@@ -76,7 +76,12 @@ const Login = (props) => {
 
   const submitHandler = (event) => {
     event.preventDefault()
-    authCtx.onLogin(emailState.value, passwordState.value)
+    // 这里call你的登录api返回结果里取token, 为了程序能跑我先写个假的
+    const token = "faketoken"
+    const expTime = new Date(
+      new Date().getTime() + +7199 * 1000 // token有效期一般是俩小时
+    )
+    authCtx.onLogin(token, expTime)
   }
 
   return (

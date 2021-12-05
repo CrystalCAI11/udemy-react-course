@@ -11,6 +11,7 @@ const NewCommentForm = (props) => {
   const { sendRequest, status, error } = useHttp(addComment)
 
   const { quoteId, onAddComment } = props
+  console.log(quoteId)
 
   useEffect(() => {
     if (status === "completed" && !error) {
@@ -21,7 +22,7 @@ const NewCommentForm = (props) => {
   const submitFormHandler = (event) => {
     event.preventDefault()
     const enteredText = commentTextRef.current.value
-    sendRequest({ commentData: { text: enteredText }, quoteId: quoteId })
+    sendRequest({ text: enteredText, id: quoteId })
   }
 
   return (

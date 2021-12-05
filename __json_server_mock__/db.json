@@ -1,0 +1,24 @@
+{
+  "quotes": [
+    {
+      "author": "test1",
+      "text": "test2",
+      "id": 1
+    },
+    {
+      "author": "Tony",
+      "text": "aiyowei",
+      "id": 2
+    }
+  ],
+  "comments": [
+    {
+      "text": "nima",
+      "id": 1
+    },
+    {
+      "text": "2",
+      "id": "2"
+    }
+  ]
+}
